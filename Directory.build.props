@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <Project>
+      <PropertyGroup>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+      </PropertyGroup>
+
+      <ItemGroup>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+        <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json">
+          <Link>stylecop.json</Link>
+        </AdditionalFiles>
+      </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)standard.ruleset" Link="standard.ruleset" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)standard.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
+  </Project>
