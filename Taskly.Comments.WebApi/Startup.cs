@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,8 @@ namespace Taskly.Comments.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSwaggerDocumentation();
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(opts => { opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

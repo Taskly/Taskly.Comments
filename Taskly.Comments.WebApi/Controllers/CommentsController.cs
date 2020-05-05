@@ -31,12 +31,24 @@ namespace Taskly.Comments.WebApi.Controllers
         [HttpGet("list/{locator}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<CommentsListDto> GetCommentsList(string locator, int page = 0, int pageSize = 100)
+        public ActionResult<CommentsListDto> GetCommentsList(string locator, int page = 0, int pageSize = 100,
+            CommentsListSortType sort = CommentsListSortType.NewToOld)
         {
+            IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
+            switch (sort)
+            {
+                case CommentsListSortType.NewToOld:
+                    commentsDto = commentsDto.OrderByDescending(x => x.Id);
+                    break;
+                case CommentsListSortType.OldToNew:
+                    commentsDto = commentsDto.OrderBy(x => x.Id);
+                    break;
+            }
+
             var dto = new CommentsListDto
             {
                 Locator = locator,
-                Comments = Data.Skip(page * pageSize).Take(pageSize).ToList()
+                Comments = commentsDto.ToList()
             };
             return Ok(dto);
         }
