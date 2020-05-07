@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Taskly.Comments.Application;
 using Taskly.Comments.WebApi.Dto;
 
 namespace Taskly.Comments.WebApi.Controllers
@@ -28,10 +29,15 @@ namespace Taskly.Comments.WebApi.Controllers
             }
         }
 
+        public CommentsController(CommentsDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
         [HttpGet("list/{locator}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<CommentsListDto> GetCommentsList(string locator, int page = 0, int pageSize = 100,
+        public ActionResult<CommentsListDto> GetCommentsList(LocatorDto locator, int page = 0, int pageSize = 100,
             CommentsListSortType sort = CommentsListSortType.NewToOld)
         {
             IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
@@ -100,6 +106,8 @@ namespace Taskly.Comments.WebApi.Controllers
             Data.Remove(dto);
             return NoContent();
         }
+
+        private readonly CommentsDbContext _dbContext;
 
         private static readonly List<CommentDto> Data;
         private static int _counter;

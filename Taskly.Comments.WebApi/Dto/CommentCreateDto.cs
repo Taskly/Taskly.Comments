@@ -4,7 +4,7 @@
     {
         public string ParentId { get; set; }
 
-        public string Locator { get; set; }
+        public LocatorDto Locator { get; set; }
 
         public string AuthorId { get; set; }
 
