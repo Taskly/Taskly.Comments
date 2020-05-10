@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Taskly.Comments.Application;
@@ -11,52 +9,24 @@ namespace Taskly.Comments.WebApi.Controllers
     [Route("api/comments")]
     public class CommentsController : ControllerBase
     {
-        static CommentsController()
+        /*public CommentsController(ICommentsService commentsService)
         {
-            var rand = new Random();
-            Data = new List<CommentDto>();
-            _counter = 50000;
-            for (int i = 0; i < _counter; ++i)
-            {
-                Data.Add(new CommentDto
-                {
-                    Id = (i + 1).ToString(),
-                    ParentId = 0.ToString(),
-                    AuthorId = rand.Next(1, 100000).ToString(),
-                    Text = $"Some comment text. ({i}).",
-                    Timestamp = DateTime.UtcNow
-                });
-            }
-        }
+            _commentsService = commentsService;
+        }*/
 
-        public CommentsController(CommentsDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
-        [HttpGet("list/{locator}")]
+        [HttpGet("list")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<CommentsListDto> GetCommentsList(LocatorDto locator, int page = 0, int pageSize = 100,
-            CommentsListSortType sort = CommentsListSortType.NewToOld)
+        public ActionResult<List<CommentDto>> GetCommentsList(LocatorDto locator)
         {
-            IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
-            switch (sort)
-            {
-                case CommentsListSortType.NewToOld:
-                    commentsDto = commentsDto.OrderByDescending(x => x.Id);
-                    break;
-                case CommentsListSortType.OldToNew:
-                    commentsDto = commentsDto.OrderBy(x => x.Id);
-                    break;
-            }
+            return Ok();
+        }
 
-            var dto = new CommentsListDto
-            {
-                Locator = locator,
-                Comments = commentsDto.ToList()
-            };
-            return Ok(dto);
+        [HttpGet("top")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult<List<CommentDto>> GetTopComments(LocatorDto locator)
+        {
+            return Ok();
         }
 
         [HttpGet("{id}")]
@@ -65,13 +35,7 @@ namespace Taskly.Comments.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<CommentDto> GetComment(string id)
         {
-            CommentDto dto = Data.FirstOrDefault(x => x.Id == id);
-            if (dto == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(dto);
+            return Ok();
         }
 
         [HttpPost]
@@ -79,17 +43,8 @@ namespace Taskly.Comments.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult<CommentDto> CreateComment([FromBody] CommentCreateDto dto)
         {
-            var commentDto = new CommentDto
-            {
-                Id = (_counter++).ToString(),
-                ParentId = dto.ParentId,
-                AuthorId = dto.AuthorId,
-                Text = dto.Text,
-                Timestamp = DateTime.UtcNow
-            };
-
-            Data.Add(commentDto);
-            return CreatedAtAction(nameof(GetComment), new { id = commentDto.Id }, commentDto);
+            // return CreatedAtAction(nameof(GetComment), new { id = commentDto.Id }, commentDto);
+            return Ok();
         }
 
         [HttpDelete("id")]
@@ -97,19 +52,9 @@ namespace Taskly.Comments.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult DeleteComment(string id)
         {
-            CommentDto dto = Data.FirstOrDefault(x => x.Id == id);
-            if (dto == null)
-            {
-                return NotFound();
-            }
-
-            Data.Remove(dto);
             return NoContent();
         }
 
-        private readonly CommentsDbContext _dbContext;
-
-        private static readonly List<CommentDto> Data;
-        private static int _counter;
+        // private readonly ICommentsService _commentsService;
     }
 }

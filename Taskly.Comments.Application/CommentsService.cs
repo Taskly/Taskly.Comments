@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -14,32 +15,77 @@ namespace Taskly.Comments.Application
             _dbContext = dbContext;
         }
 
-        public async Task<List<Comment>> GetCommentsByLocator(Locator locator, bool includeDeleted = false)
+        public async Task<List<Comment>> GetCommentsByLocator(Locator locator)
         {
-            IQueryable<CommentEntity> query = _dbContext.Comments.AsQueryable();
+            /*IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
+            switch (sort)
+            {
+                case CommentsListSortType.NewToOld:
+                    commentsDto = commentsDto.OrderByDescending(x => x.Id);
+                    break;
+                case CommentsListSortType.OldToNew:
+                    commentsDto = commentsDto.OrderBy(x => x.Id);
+                    break;
+            }*/
 
+            IQueryable<CommentEntity> query = _dbContext.Comments.AsQueryable();
+            query = ApplyLocator(query, locator);
+            query = query.OrderByDescending(x => x.Id);
             List<CommentEntity> entities = await query.ToListAsync();
             return entities.Select(x => x.ToModel()).ToList();
         }
 
-        public Task<List<Comment>> GetCommentsByAuthor(string authorId, bool includeDeleted = false)
+        public async Task<List<Comment>> GetCommentsByAuthor(string authorId, bool includeDeleted = false)
         {
-            throw new System.NotImplementedException();
+            int entityAuthorId = int.Parse(authorId);
+            List<CommentEntity> entities =
+                await _dbContext.Comments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
+
+            if (includeDeleted)
+            {
+                List<CommentEntity> deletedEntities =
+                    await _dbContext.DeletedComments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
+                entities = entities.Concat(deletedEntities).ToList();
+            }
+
+            List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
+            return comments;
         }
 
-        public Task<Comment> AddComment(Comment comment)
+        public async Task<Comment> GetCommentById(string id)
         {
-            throw new System.NotImplementedException();
+            int entityId = int.Parse(id);
+            CommentEntity entity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync() ??
+                                   await _dbContext.DeletedComments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+
+            return entity.ToModel();
         }
 
-        public Task<Comment> AddReply(string parentId, Comment comment)
+        public async Task<Comment> AddComment(Comment comment)
         {
-            throw new System.NotImplementedException();
+            var entity = new CommentEntity(comment, string.Empty);
+            entity = await SaveComment(entity);
+            return entity.ToModel();
         }
 
-        public Task<Comment> MarkAsDeleted(Comment comment)
+        public async Task<Comment> AddReply(string parentId, Comment comment)
         {
-            throw new System.NotImplementedException();
+            var entity = new CommentEntity(comment, parentId);
+            entity = await SaveComment(entity);
+            return entity.ToModel();
+        }
+
+        public async Task<Comment> MarkAsDeleted(string id)
+        {
+            int entityId = int.Parse(id);
+            CommentEntity entity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+
+            _dbContext.DeletedComments.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            Comment comment = entity.ToModel();
+            comment.IsDeleted = true;
+            return comment;
         }
 
         private IQueryable<CommentEntity> ApplyLocator(IQueryable<CommentEntity> query, Locator locator)
@@ -49,7 +95,26 @@ namespace Taskly.Comments.Application
                 query = query.Where(x => x.LocatorSection == locator.Section);
             }
 
+            if (!string.IsNullOrEmpty(locator.Subsection))
+            {
+                query = query.Where(x => x.LocatorSubsection == locator.Subsection);
+            }
+
+            if (!string.IsNullOrEmpty(locator.Element))
+            {
+                query = query.Where(x => x.LocatorElement == locator.Element);
+            }
+
             return query;
+        }
+
+        private async Task<CommentEntity> SaveComment(CommentEntity entity)
+        {
+            entity.Id = 0;
+            entity.Timestamp = DateTime.UtcNow;
+            _dbContext.Comments.Add(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
         }
 
         private readonly CommentsDbContext _dbContext;

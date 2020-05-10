@@ -11,5 +11,7 @@ namespace Taskly.Comments.Application
         }
 
         public DbSet<CommentEntity> Comments { get; set; }
+
+        public DbSet<CommentEntity> DeletedComments { get; set; }
     }
 }

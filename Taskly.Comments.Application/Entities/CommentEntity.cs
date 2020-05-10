@@ -20,10 +20,9 @@ namespace Taskly.Comments.Application.Entities
             AuthorId = int.Parse(model.AuthorId);
             Text = model.Text;
             Timestamp = model.Timestamp;
-            IsDeleted = model.IsDeleted;
             LocatorSection = model.Locator.Section;
+            LocatorSubsection = model.Locator.Subsection;
             LocatorElement = model.Locator.Element;
-            LocatorAdditional = model.Locator.Additional;
         }
 
         protected CommentEntity()
@@ -40,13 +39,11 @@ namespace Taskly.Comments.Application.Entities
 
         public DateTime Timestamp { get; set; }
 
-        public bool IsDeleted { get; set; }
-
         public string LocatorSection { get; set; }
 
-        public string LocatorElement { get; set; }
+        public string LocatorSubsection { get; set; }
 
-        public string LocatorAdditional { get; set; }
+        public string LocatorElement { get; set; }
 
         public Comment ToModel()
         {
@@ -56,12 +53,11 @@ namespace Taskly.Comments.Application.Entities
                 AuthorId = AuthorId.ToString(),
                 Text = Text,
                 Timestamp = Timestamp,
-                IsDeleted = IsDeleted,
                 Locator = new Locator
                 {
                     Section = LocatorSection,
-                    Element = LocatorElement,
-                    Additional = LocatorAdditional
+                    Subsection = LocatorSubsection,
+                    Element = LocatorElement
                 }
             };
         }

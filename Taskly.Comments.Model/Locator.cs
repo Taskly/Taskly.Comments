@@ -6,8 +6,8 @@ namespace Taskly.Comments.Model
     {
         public string Section { get; set; }
 
-        public string Element { get; set; }
+        public string Subsection { get; set; }
 
-        public string Additional { get; set; }
+        public string Element { get; set; }
     }
 }
