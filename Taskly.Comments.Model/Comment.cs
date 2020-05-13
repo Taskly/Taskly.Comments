@@ -7,7 +7,6 @@ namespace Taskly.Comments.Model
     {
         public Comment()
         {
-            IsDeleted = false;
             Locator = new Locator();
             Replies = new List<Comment>();
         }
@@ -21,8 +20,6 @@ namespace Taskly.Comments.Model
         public string Text { get; set; }
 
         public DateTime Timestamp { get; set; }
-
-        public bool IsDeleted { get; set; }
 
         public List<Comment> Replies { get; set; }
     }

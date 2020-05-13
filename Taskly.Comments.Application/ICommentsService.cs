@@ -16,6 +16,6 @@ namespace Taskly.Comments.Application
 
         Task<Comment> AddReply(string parentId, Comment comment);
 
-        Task<Comment> MarkAsDeleted(string id);
+        Task<DeletedComment> MarkAsDeleted(string id);
     }
 }

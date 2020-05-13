@@ -20,14 +20,16 @@ namespace Taskly.Comments.WebApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<ICommentsService, CommentsService>();
+            services.AddDbContext<CommentsDbContext>(options =>
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddSwaggerDocumentation();
-            /*services.AddDbContext<CommentsDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));*/
             services.AddControllers()
                 .AddJsonOptions(opts => { opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env/*, CommentsDbContext dbContext*/)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, CommentsDbContext dbContext)
         {
             if (env.IsDevelopment())
             {
@@ -39,7 +41,7 @@ namespace Taskly.Comments.WebApi
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             // WARN! Not working with migrations.
-            // dbContext.Database.EnsureCreated();
+            dbContext.Database.EnsureCreated();
         }
     }
 }

@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using Taskly.Comments.Model;
 
 namespace Taskly.Comments.WebApi.Dto
 {
     public class CommentDto
     {
-        public string Id { get; set; }
+        public CommentDto(Comment model)
+        {
+            Id = model.Id;
+            AuthorId = model.AuthorId;
+            Locator = new LocatorDto(model.Locator);
+            Text = model.Text;
+            Timestamp = model.Timestamp;
+            Replies = new List<CommentDto>();
+        }
 
-        public string ParentId { get; set; }
+        public string Id { get; set; }
 
         public string AuthorId { get; set; }
 

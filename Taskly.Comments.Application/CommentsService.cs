@@ -38,27 +38,34 @@ namespace Taskly.Comments.Application
         public async Task<List<Comment>> GetCommentsByAuthor(string authorId, bool includeDeleted = false)
         {
             int entityAuthorId = int.Parse(authorId);
+
             List<CommentEntity> entities =
                 await _dbContext.Comments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
+            List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
 
             if (includeDeleted)
             {
-                List<CommentEntity> deletedEntities =
+                List<DeletedCommentEntity> deletedEntities =
                     await _dbContext.DeletedComments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
-                entities = entities.Concat(deletedEntities).ToList();
+                comments = comments.Concat(deletedEntities.Select(x => x.ToModel())).ToList();
             }
 
-            List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
             return comments;
         }
 
         public async Task<Comment> GetCommentById(string id)
         {
             int entityId = int.Parse(id);
-            CommentEntity entity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync() ??
-                                   await _dbContext.DeletedComments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            if (commentEntity != null)
+            {
+                return commentEntity.ToModel();
+            }
 
-            return entity.ToModel();
+            DeletedCommentEntity deletedCommentEntity =
+                await _dbContext.DeletedComments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+
+            return deletedCommentEntity.ToModel();
         }
 
         public async Task<Comment> AddComment(Comment comment)
@@ -75,17 +82,17 @@ namespace Taskly.Comments.Application
             return entity.ToModel();
         }
 
-        public async Task<Comment> MarkAsDeleted(string id)
+        public async Task<DeletedComment> MarkAsDeleted(string id)
         {
             int entityId = int.Parse(id);
-            CommentEntity entity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            var deletedCommentEntity = new DeletedCommentEntity(commentEntity, DateTime.UtcNow);
 
-            _dbContext.DeletedComments.Add(entity);
+            // TODO: Transaction?
+            _dbContext.Comments.Remove(commentEntity);
+            _dbContext.DeletedComments.Add(deletedCommentEntity);
             await _dbContext.SaveChangesAsync();
-
-            Comment comment = entity.ToModel();
-            comment.IsDeleted = true;
-            return comment;
+            return deletedCommentEntity.ToModel();
         }
 
         private IQueryable<CommentEntity> ApplyLocator(IQueryable<CommentEntity> query, Locator locator)

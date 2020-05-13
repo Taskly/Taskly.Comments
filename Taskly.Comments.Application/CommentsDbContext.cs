@@ -12,6 +12,12 @@ namespace Taskly.Comments.Application
 
         public DbSet<CommentEntity> Comments { get; set; }
 
-        public DbSet<CommentEntity> DeletedComments { get; set; }
+        public DbSet<DeletedCommentEntity> DeletedComments { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CommentEntity>().ToTable("Comments");
+            modelBuilder.Entity<DeletedCommentEntity>().ToTable("DeletedComments");
+        }
     }
 }
