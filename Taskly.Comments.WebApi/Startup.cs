@@ -37,6 +37,7 @@ namespace Taskly.Comments.WebApi
             }
 
             app.UseSwaggerDocumentation();
+            app.UseExceptionMiddleware();
             app.UseRouting();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

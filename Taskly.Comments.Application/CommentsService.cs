@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Taskly.Comments.Application.Entities;
 using Taskly.Comments.Model;
+using Taskly.Comments.Model.Exceptions;
 
 namespace Taskly.Comments.Application
 {
@@ -16,6 +17,8 @@ namespace Taskly.Comments.Application
 
         public async Task<List<Comment>> GetCommentsByLocator(Locator locator)
         {
+            ValidateLocator(locator);
+
             /*IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
             switch (sort)
             {
@@ -36,6 +39,11 @@ namespace Taskly.Comments.Application
 
         public async Task<List<Comment>> GetCommentsByAuthor(string authorId)
         {
+            if (string.IsNullOrEmpty(authorId))
+            {
+                throw new InvalidArgumentException("Author ID required.");
+            }
+
             List<CommentEntity> entities =
                 await _dbContext.Comments.Where(x => x.AuthorId == authorId).ToListAsync();
             List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
@@ -44,6 +52,11 @@ namespace Taskly.Comments.Application
 
         public async Task<List<DeletedComment>> GetDeletedCommentsByAuthor(string authorId)
         {
+            if (string.IsNullOrEmpty(authorId))
+            {
+                throw new InvalidArgumentException("Author ID required.");
+            }
+
             List<DeletedCommentEntity> entities =
                 await _dbContext.DeletedComments.Where(x => x.AuthorId == authorId).ToListAsync();
             List<DeletedComment> comments = entities.Select(x => x.ToModel()).ToList();
@@ -52,6 +65,11 @@ namespace Taskly.Comments.Application
 
         public async Task<Comment> GetCommentById(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new InvalidArgumentException("Comment ID required.");
+            }
+
             int entityId = int.Parse(id);
             CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
             if (commentEntity != null)
@@ -61,12 +79,18 @@ namespace Taskly.Comments.Application
 
             DeletedCommentEntity deletedCommentEntity =
                 await _dbContext.DeletedComments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            if (deletedCommentEntity is null)
+            {
+                throw new NotFoundException("Comment", id);
+            }
 
             return deletedCommentEntity.ToModel();
         }
 
         public async Task<Comment> AddComment(Comment comment)
         {
+            ValidateComment(comment);
+
             var entity = new CommentEntity(comment, string.Empty);
             _dbContext.Comments.Add(entity);
             await _dbContext.SaveChangesAsync();
@@ -75,6 +99,12 @@ namespace Taskly.Comments.Application
 
         public async Task<Comment> AddReply(string parentId, Comment comment)
         {
+            ValidateComment(comment);
+            if (string.IsNullOrEmpty(parentId))
+            {
+                throw new InvalidArgumentException("Parent ID required.");
+            }
+
             var entity = new CommentEntity(comment, parentId);
             _dbContext.Comments.Add(entity);
             await _dbContext.SaveChangesAsync();
@@ -83,8 +113,18 @@ namespace Taskly.Comments.Application
 
         public async Task<DeletedComment> MarkAsDeleted(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new InvalidArgumentException("Comment ID required.");
+            }
+
             int entityId = int.Parse(id);
             CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
+            if (commentEntity is null)
+            {
+                throw new NotFoundException("Comment", id);
+            }
+
             Comment comment = commentEntity.ToModel();
             var deletedComment = new DeletedComment(comment);
             var deletedCommentEntity = new DeletedCommentEntity(deletedComment, commentEntity.ParentId.ToString());
@@ -98,10 +138,7 @@ namespace Taskly.Comments.Application
 
         private IQueryable<CommentEntity> ApplyLocator(IQueryable<CommentEntity> query, Locator locator)
         {
-            if (!string.IsNullOrEmpty(locator.Section))
-            {
-                query = query.Where(x => x.LocatorSection == locator.Section);
-            }
+            query = query.Where(x => x.LocatorSection == locator.Section);
 
             if (!string.IsNullOrEmpty(locator.Subsection))
             {
@@ -114,6 +151,34 @@ namespace Taskly.Comments.Application
             }
 
             return query;
+        }
+
+        private void ValidateComment(Comment comment)
+        {
+            if (comment is null)
+            {
+                throw new InvalidArgumentException("Invalid argument: comment.");
+            }
+
+            if (string.IsNullOrEmpty(comment.AuthorId))
+            {
+                throw new InvalidArgumentException("Author ID required.");
+            }
+
+            if (string.IsNullOrEmpty(comment.Text))
+            {
+                throw new InvalidArgumentException("Comment text required.");
+            }
+
+            ValidateLocator(comment.Locator);
+        }
+
+        private void ValidateLocator(Locator locator)
+        {
+            if (locator is null || string.IsNullOrEmpty(locator.Section))
+            {
+                throw new InvalidArgumentException("Locator section required.");
+            }
         }
 
         private readonly CommentsDbContext _dbContext;
