@@ -4,10 +4,17 @@ namespace Taskly.Comments.Model
 {
     public class Locator
     {
-        public string Section { get; set; }
+        public Locator(string section, string subsection, string element)
+        {
+            Section = section;
+            Subsection = subsection;
+            Element = element;
+        }
 
-        public string Subsection { get; set; }
+        public string Section { get; }
 
-        public string Element { get; set; }
+        public string Subsection { get; }
+
+        public string Element { get; }
     }
 }

@@ -8,7 +8,9 @@ namespace Taskly.Comments.Application
     {
         Task<List<Comment>> GetCommentsByLocator(Locator locator);
 
-        Task<List<Comment>> GetCommentsByAuthor(string authorId, bool includeDeleted = false);
+        Task<List<Comment>> GetCommentsByAuthor(string authorId);
+
+        Task<List<DeletedComment>> GetDeletedCommentsByAuthor(string authorId);
 
         Task<Comment> GetCommentById(string id);
 

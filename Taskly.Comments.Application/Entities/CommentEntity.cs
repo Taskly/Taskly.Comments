@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Taskly.Comments.Model;
 
 namespace Taskly.Comments.Application.Entities
@@ -17,7 +18,7 @@ namespace Taskly.Comments.Application.Entities
                 ParentId = int.Parse(parentId);
             }
 
-            AuthorId = int.Parse(model.AuthorId);
+            AuthorId = model.AuthorId;
             Text = model.Text;
             Timestamp = model.Timestamp;
             LocatorSection = model.Locator.Section;
@@ -29,37 +30,27 @@ namespace Taskly.Comments.Application.Entities
         {
         }
 
-        public int Id { get; set; }
+        public int Id { get; private set; }
 
-        public int ParentId { get; set; }
+        public int ParentId { get; private set; }
 
-        public int AuthorId { get; set; }
+        public string AuthorId { get; private set; }
 
-        public string Text { get; set; }
+        public string Text { get; private set; }
 
-        public DateTime Timestamp { get; set; }
+        public DateTime Timestamp { get; private set; }
 
-        public string LocatorSection { get; set; }
+        public string LocatorSection { get; private set; }
 
-        public string LocatorSubsection { get; set; }
+        public string LocatorSubsection { get; private set; }
 
-        public string LocatorElement { get; set; }
+        public string LocatorElement { get; private set; }
 
         public Comment ToModel()
         {
-            return new Comment
-            {
-                Id = Id == 0 ? string.Empty : Id.ToString(),
-                AuthorId = AuthorId.ToString(),
-                Text = Text,
-                Timestamp = Timestamp,
-                Locator = new Locator
-                {
-                    Section = LocatorSection,
-                    Subsection = LocatorSubsection,
-                    Element = LocatorElement
-                }
-            };
+            Locator locator = new Locator(LocatorSection, LocatorSubsection, LocatorElement);
+            string id = Id == 0 ? string.Empty : Id.ToString();
+            return new Comment(id, AuthorId, locator, Text, Timestamp, new List<Comment>());
         }
     }
 }

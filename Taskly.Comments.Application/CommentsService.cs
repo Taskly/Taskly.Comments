@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -35,21 +34,19 @@ namespace Taskly.Comments.Application
             return entities.Select(x => x.ToModel()).ToList();
         }
 
-        public async Task<List<Comment>> GetCommentsByAuthor(string authorId, bool includeDeleted = false)
+        public async Task<List<Comment>> GetCommentsByAuthor(string authorId)
         {
-            int entityAuthorId = int.Parse(authorId);
-
             List<CommentEntity> entities =
-                await _dbContext.Comments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
+                await _dbContext.Comments.Where(x => x.AuthorId == authorId).ToListAsync();
             List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
+            return comments;
+        }
 
-            if (includeDeleted)
-            {
-                List<DeletedCommentEntity> deletedEntities =
-                    await _dbContext.DeletedComments.Where(x => x.AuthorId == entityAuthorId).ToListAsync();
-                comments = comments.Concat(deletedEntities.Select(x => x.ToModel())).ToList();
-            }
-
+        public async Task<List<DeletedComment>> GetDeletedCommentsByAuthor(string authorId)
+        {
+            List<DeletedCommentEntity> entities =
+                await _dbContext.DeletedComments.Where(x => x.AuthorId == authorId).ToListAsync();
+            List<DeletedComment> comments = entities.Select(x => x.ToModel()).ToList();
             return comments;
         }
 
@@ -71,14 +68,16 @@ namespace Taskly.Comments.Application
         public async Task<Comment> AddComment(Comment comment)
         {
             var entity = new CommentEntity(comment, string.Empty);
-            entity = await SaveComment(entity);
+            _dbContext.Comments.Add(entity);
+            await _dbContext.SaveChangesAsync();
             return entity.ToModel();
         }
 
         public async Task<Comment> AddReply(string parentId, Comment comment)
         {
             var entity = new CommentEntity(comment, parentId);
-            entity = await SaveComment(entity);
+            _dbContext.Comments.Add(entity);
+            await _dbContext.SaveChangesAsync();
             return entity.ToModel();
         }
 
@@ -86,7 +85,9 @@ namespace Taskly.Comments.Application
         {
             int entityId = int.Parse(id);
             CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
-            var deletedCommentEntity = new DeletedCommentEntity(commentEntity, DateTime.UtcNow);
+            Comment comment = commentEntity.ToModel();
+            var deletedComment = new DeletedComment(comment);
+            var deletedCommentEntity = new DeletedCommentEntity(deletedComment, commentEntity.ParentId.ToString());
 
             // TODO: Transaction?
             _dbContext.Comments.Remove(commentEntity);
@@ -113,15 +114,6 @@ namespace Taskly.Comments.Application
             }
 
             return query;
-        }
-
-        private async Task<CommentEntity> SaveComment(CommentEntity entity)
-        {
-            entity.Id = 0;
-            entity.Timestamp = DateTime.UtcNow;
-            _dbContext.Comments.Add(entity);
-            await _dbContext.SaveChangesAsync();
-            return entity;
         }
 
         private readonly CommentsDbContext _dbContext;

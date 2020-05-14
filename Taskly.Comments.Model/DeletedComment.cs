@@ -1,24 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Taskly.Comments.Model
 {
     public class DeletedComment : Comment
     {
-        public DeletedComment()
+        public DeletedComment(Comment comment)
+            : this(comment.Id, comment.AuthorId, comment.Locator, comment.Text, comment.Timestamp, comment.Replies,
+                DateTime.UtcNow)
         {
         }
 
-        public DeletedComment(Comment comment, DateTime removalTimestamp)
+        public DeletedComment(string id, string authorId, Locator locator, string text, DateTime timestamp,
+            List<Comment> replies, DateTime removalTimestamp)
+            : base(id, authorId, locator, text, timestamp, replies)
         {
-            Id = comment.Id;
-            AuthorId = comment.Id;
-            Locator = comment.Locator;
-            Text = comment.Text;
-            Timestamp = comment.Timestamp;
-            Replies = comment.Replies;
             RemovalTimestamp = removalTimestamp;
         }
 
-        public DateTime RemovalTimestamp { get; set; }
+        public DateTime RemovalTimestamp { get; }
     }
 }

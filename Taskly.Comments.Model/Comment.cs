@@ -5,22 +5,32 @@ namespace Taskly.Comments.Model
 {
     public class Comment
     {
-        public Comment()
+        public Comment(string authorId, Locator locator, string text)
+            : this(null, authorId, locator, text, DateTime.UtcNow, new List<Comment>())
         {
-            Locator = new Locator();
-            Replies = new List<Comment>();
         }
 
-        public string Id { get; set; }
+        public Comment(string id, string authorId, Locator locator, string text, DateTime timestamp,
+            List<Comment> replies)
+        {
+            Id = id;
+            AuthorId = authorId;
+            Locator = locator;
+            Text = text;
+            Timestamp = timestamp;
+            Replies = replies;
+        }
 
-        public string AuthorId { get; set; }
+        public string Id { get; }
 
-        public Locator Locator { get; set; }
+        public string AuthorId { get; }
 
-        public string Text { get; set; }
+        public Locator Locator { get; }
 
-        public DateTime Timestamp { get; set; }
+        public string Text { get; }
 
-        public List<Comment> Replies { get; set; }
+        public DateTime Timestamp { get; }
+
+        public List<Comment> Replies { get; }
     }
 }

@@ -39,23 +39,20 @@ namespace Taskly.Comments.WebApi.Controllers
         [HttpGet("author/{authorId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<List<CommentDto>>> GetCommentsByAuthor(string authorId,
-            bool includeDeleted = false)
+        public async Task<ActionResult<List<CommentDto>>> GetCommentsByAuthor(string authorId)
         {
-            List<Comment> comments = await _commentsService.GetCommentsByAuthor(authorId, includeDeleted);
-            List<CommentDto> commentsDto = new List<CommentDto>();
-            foreach (Comment comment in comments)
-            {
-                if (comment is DeletedComment deletedComment)
-                {
-                    commentsDto.Add(new DeletedCommentDto(deletedComment));
-                }
-                else
-                {
-                    commentsDto.Add(new CommentDto(comment));
-                }
-            }
+            List<Comment> comments = await _commentsService.GetCommentsByAuthor(authorId);
+            List<CommentDto> commentsDto = comments.Select(x => new CommentDto(x)).ToList();
+            return Ok(commentsDto);
+        }
 
+        [HttpGet("author/{authorId}/deleted")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<List<DeletedCommentDto>>> GetDeletedCommentsByAuthor(string authorId)
+        {
+            List<DeletedComment> comments = await _commentsService.GetDeletedCommentsByAuthor(authorId);
+            List<DeletedCommentDto> commentsDto = comments.Select(x => new DeletedCommentDto(x)).ToList();
             return Ok(commentsDto);
         }
 
@@ -75,12 +72,7 @@ namespace Taskly.Comments.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<CommentDto>> CreateComment([FromBody] CommentCreateDto dto)
         {
-            var comment = new Comment
-            {
-                Locator = dto.Locator.ToModel(),
-                AuthorId = dto.AuthorId,
-                Text = dto.Text
-            };
+            var comment = new Comment(dto.AuthorId, dto.Locator.ToModel(), dto.Text);
 
             if (!string.IsNullOrEmpty(dto.ParentId))
             {

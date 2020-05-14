@@ -23,12 +23,7 @@ namespace Taskly.Comments.WebApi.Dto
 
         public Locator ToModel()
         {
-            return new Locator
-            {
-                Section = Section,
-                Subsection = Subsection,
-                Element = Element
-            };
+            return new Locator(Section, Subsection, Element);
         }
     }
 }
