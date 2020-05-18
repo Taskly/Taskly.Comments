@@ -1,4 +1,5 @@
-﻿using Taskly.Comments.Model;
+﻿using System.ComponentModel.DataAnnotations;
+using Taskly.Comments.Model;
 
 namespace Taskly.Comments.WebApi.Dto
 {
@@ -15,6 +16,7 @@ namespace Taskly.Comments.WebApi.Dto
             Element = model.Element;
         }
 
+        [Required]
         public string Section { get; set; }
 
         public string Subsection { get; set; }

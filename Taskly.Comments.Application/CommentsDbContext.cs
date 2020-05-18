@@ -16,8 +16,8 @@ namespace Taskly.Comments.Application
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<CommentEntity>().ToTable("Comments");
-            modelBuilder.Entity<DeletedCommentEntity>().ToTable("DeletedComments");
+            modelBuilder.Entity<CommentEntity>().ToTable("Comments"); // comments
+            modelBuilder.Entity<DeletedCommentEntity>().ToTable("DeletedComments"); // deleted_comments
         }
     }
 }
