@@ -4,7 +4,7 @@ namespace Taskly.Comments.WebApi.Dto
 {
     public class CommentCreateDto
     {
-        public string ParentId { get; set; }
+        public string UserId { get; set; }
 
         [Required]
         public LocatorDto Locator { get; set; }

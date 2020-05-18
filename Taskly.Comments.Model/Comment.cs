@@ -10,11 +10,11 @@ namespace Taskly.Comments.Model
         {
         }
 
-        public Comment(string id, string authorId, Locator locator, string text, DateTime timestamp,
+        public Comment(string id, string userId, Locator locator, string text, DateTime timestamp,
             List<Comment> replies)
         {
             Id = id;
-            AuthorId = authorId;
+            UserId = userId;
             Locator = locator;
             Text = text;
             Timestamp = timestamp;
@@ -23,7 +23,7 @@ namespace Taskly.Comments.Model
 
         public string Id { get; }
 
-        public string AuthorId { get; }
+        public string UserId { get; }
 
         public Locator Locator { get; }
 

@@ -36,22 +36,22 @@ namespace Taskly.Comments.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet("author/{authorId}")]
+        [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<List<CommentDto>>> GetCommentsByAuthor(string authorId)
+        public async Task<ActionResult<List<CommentDto>>> GetCommentsByUser(string authorId)
         {
-            List<Comment> comments = await _commentsService.GetCommentsByAuthor(authorId);
+            List<Comment> comments = await _commentsService.GetCommentsByUser(authorId);
             List<CommentDto> commentsDto = comments.Select(x => new CommentDto(x)).ToList();
             return Ok(commentsDto);
         }
 
-        [HttpGet("author/{authorId}/deleted")]
+        [HttpGet("user/{userId}/deleted")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<List<DeletedCommentDto>>> GetDeletedCommentsByAuthor(string authorId)
         {
-            List<DeletedComment> comments = await _commentsService.GetDeletedCommentsByAuthor(authorId);
+            List<DeletedComment> comments = await _commentsService.GetDeletedCommentsByUser(authorId);
             List<DeletedCommentDto> commentsDto = comments.Select(x => new DeletedCommentDto(x)).ToList();
             return Ok(commentsDto);
         }
@@ -74,9 +74,9 @@ namespace Taskly.Comments.WebApi.Controllers
         {
             var comment = new Comment(dto.AuthorId, dto.Locator.ToModel(), dto.Text);
 
-            if (!string.IsNullOrEmpty(dto.ParentId))
+            if (!string.IsNullOrEmpty(dto.UserId))
             {
-                comment = await _commentsService.AddReply(dto.ParentId, comment);
+                comment = await _commentsService.AddReply(dto.UserId, comment);
             }
             else
             {

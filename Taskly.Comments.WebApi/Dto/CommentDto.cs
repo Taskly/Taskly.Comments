@@ -9,7 +9,7 @@ namespace Taskly.Comments.WebApi.Dto
         public CommentDto(Comment model)
         {
             Id = model.Id;
-            AuthorId = model.AuthorId;
+            UserId = model.UserId;
             Locator = new LocatorDto(model.Locator);
             Text = model.Text;
             Timestamp = model.Timestamp;
@@ -18,7 +18,7 @@ namespace Taskly.Comments.WebApi.Dto
 
         public string Id { get; set; }
 
-        public string AuthorId { get; set; }
+        public string UserId { get; set; }
 
         public LocatorDto Locator { get; set; }
 

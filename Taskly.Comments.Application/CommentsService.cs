@@ -37,28 +37,28 @@ namespace Taskly.Comments.Application
             return entities.Select(x => x.ToModel()).ToList();
         }
 
-        public async Task<List<Comment>> GetCommentsByAuthor(string authorId)
+        public async Task<List<Comment>> GetCommentsByUser(string userId)
         {
-            if (string.IsNullOrEmpty(authorId))
+            if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidArgumentException("Author ID required.");
+                throw new InvalidArgumentException("User ID required.");
             }
 
             List<CommentEntity> entities =
-                await _dbContext.Comments.Where(x => x.AuthorId == authorId).ToListAsync();
+                await _dbContext.Comments.Where(x => x.UserId == userId).ToListAsync();
             List<Comment> comments = entities.Select(x => x.ToModel()).ToList();
             return comments;
         }
 
-        public async Task<List<DeletedComment>> GetDeletedCommentsByAuthor(string authorId)
+        public async Task<List<DeletedComment>> GetDeletedCommentsByUser(string userId)
         {
-            if (string.IsNullOrEmpty(authorId))
+            if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidArgumentException("Author ID required.");
+                throw new InvalidArgumentException("User ID required.");
             }
 
             List<DeletedCommentEntity> entities =
-                await _dbContext.DeletedComments.Where(x => x.AuthorId == authorId).ToListAsync();
+                await _dbContext.DeletedComments.Where(x => x.UserId == userId).ToListAsync();
             List<DeletedComment> comments = entities.Select(x => x.ToModel()).ToList();
             return comments;
         }
@@ -160,9 +160,9 @@ namespace Taskly.Comments.Application
                 throw new InvalidArgumentException("Invalid argument: comment.");
             }
 
-            if (string.IsNullOrEmpty(comment.AuthorId))
+            if (string.IsNullOrEmpty(comment.UserId))
             {
-                throw new InvalidArgumentException("Author ID required.");
+                throw new InvalidArgumentException("User ID required.");
             }
 
             if (string.IsNullOrEmpty(comment.Text))

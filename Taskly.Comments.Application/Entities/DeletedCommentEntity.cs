@@ -18,7 +18,7 @@ namespace Taskly.Comments.Application.Entities
                 ParentId = int.Parse(parentId);
             }
 
-            AuthorId = model.AuthorId;
+            UserId = model.UserId;
             Text = model.Text;
             Timestamp = model.Timestamp;
             LocatorSection = model.Locator.Section;
@@ -35,7 +35,7 @@ namespace Taskly.Comments.Application.Entities
 
         public int ParentId { get; private set; }
 
-        public string AuthorId { get; private set; }
+        public string UserId { get; private set; }
 
         public string Text { get; private set; }
 
@@ -53,7 +53,7 @@ namespace Taskly.Comments.Application.Entities
         {
             Locator locator = new Locator(LocatorSection, LocatorSubsection, LocatorElement);
             string id = Id == 0 ? string.Empty : Id.ToString();
-            return new DeletedComment(id, AuthorId, locator, Text, Timestamp, new List<Comment>(), RemovalTimestamp);
+            return new DeletedComment(id, UserId, locator, Text, Timestamp, new List<Comment>(), RemovalTimestamp);
         }
     }
 }
