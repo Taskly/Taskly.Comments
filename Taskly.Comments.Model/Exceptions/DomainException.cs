@@ -2,9 +2,9 @@
 
 namespace Taskly.Comments.Model.Exceptions
 {
-    public abstract class AppException : Exception
+    public abstract class DomainException : Exception
     {
-        public AppException(string message)
+        public DomainException(string message)
             : base(message)
         {
         }

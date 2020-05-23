@@ -1,56 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using Taskly.Comments.Model;
 
 namespace Taskly.Comments.Application.Entities
 {
     public class CommentEntity
     {
-        public CommentEntity(Comment model, string parentId)
-        {
-            if (!string.IsNullOrEmpty(model.Id))
-            {
-                Id = int.Parse(model.Id);
-            }
+        public int Id { get; set; }
 
-            if (!string.IsNullOrEmpty(parentId))
-            {
-                ParentId = int.Parse(parentId);
-            }
+        public int ParentId { get; set; }
 
-            UserId = model.UserId;
-            Text = model.Text;
-            Timestamp = model.Timestamp;
-            LocatorSection = model.Locator.Section;
-            LocatorSubsection = model.Locator.Subsection;
-            LocatorElement = model.Locator.Element;
-        }
+        public string UserId { get; set; }
 
-        protected CommentEntity()
-        {
-        }
+        public CommentStatus Status { get; set; }
 
-        public int Id { get; private set; }
+        public string LocatorSection { get; set; }
 
-        public int ParentId { get; private set; }
+        public string LocatorSubsection { get; set; }
 
-        public string UserId { get; private set; }
+        public string LocatorElement { get; set; }
 
-        public string Text { get; private set; }
+        public string Text { get; set; }
 
-        public DateTime Timestamp { get; private set; }
+        public DateTime Timestamp { get; set; }
 
-        public string LocatorSection { get; private set; }
+        public string RemovalUserId { get; set; }
 
-        public string LocatorSubsection { get; private set; }
-
-        public string LocatorElement { get; private set; }
-
-        public Comment ToModel()
-        {
-            Locator locator = new Locator(LocatorSection, LocatorSubsection, LocatorElement);
-            string id = Id == 0 ? string.Empty : Id.ToString();
-            return new Comment(id, UserId, locator, Text, Timestamp, new List<Comment>());
-        }
+        public DateTime? RemovalTimestamp { get; set; }
     }
 }

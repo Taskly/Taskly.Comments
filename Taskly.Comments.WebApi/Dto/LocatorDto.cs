@@ -5,15 +5,15 @@ namespace Taskly.Comments.WebApi.Dto
 {
     public class LocatorDto
     {
-        public LocatorDto()
-        {
-        }
-
         public LocatorDto(Locator model)
         {
             Section = model.Section;
             Subsection = model.Subsection;
             Element = model.Element;
+        }
+
+        protected LocatorDto()
+        {
         }
 
         [Required]

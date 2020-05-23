@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace Taskly.Comments.WebApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAutoMapper(typeof(EntitiesMappingProfile));
             services.AddScoped<ICommentsService, CommentsService>();
             services.AddDbContext<CommentsDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
@@ -42,6 +44,7 @@ namespace Taskly.Comments.WebApi
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             // WARN! Not working with migrations.
+            dbContext.Database.EnsureDeleted();
             dbContext.Database.EnsureCreated();
         }
     }

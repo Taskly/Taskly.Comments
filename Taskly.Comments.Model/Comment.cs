@@ -1,36 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
+using Taskly.Comments.Model.Exceptions;
 
 namespace Taskly.Comments.Model
 {
     public class Comment
     {
-        public Comment(string authorId, Locator locator, string text)
-            : this(null, authorId, locator, text, DateTime.UtcNow, new List<Comment>())
+        public Comment(int parentId, string userId, Locator locator, string text)
         {
-        }
+            Validate(userId, locator, text);
 
-        public Comment(string id, string userId, Locator locator, string text, DateTime timestamp,
-            List<Comment> replies)
-        {
-            Id = id;
+            ParentId = parentId;
             UserId = userId;
             Locator = locator;
             Text = text;
-            Timestamp = timestamp;
-            Replies = replies;
+            Timestamp = DateTime.UtcNow;
+            Status = CommentStatus.Active;
         }
 
-        public string Id { get; }
+        protected Comment()
+        {
+        }
 
-        public string UserId { get; }
+        public int Id { get; protected set; }
 
-        public Locator Locator { get; }
+        public int ParentId { get; protected set; }
 
-        public string Text { get; }
+        public string UserId { get; protected set; }
 
-        public DateTime Timestamp { get; }
+        public CommentStatus Status { get; protected set; }
 
-        public List<Comment> Replies { get; }
+        public Locator Locator { get; protected set; }
+
+        public string Text { get; protected set; }
+
+        public DateTime Timestamp { get; protected set; }
+
+        private void Validate(string userId, Locator locator, string text)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new InvalidArgumentDomainException("Comment User ID required.");
+            }
+
+            if (locator is null)
+            {
+                throw new InvalidArgumentDomainException("Comment Locator required.");
+            }
+
+            if (string.IsNullOrEmpty(text))
+            {
+                throw new InvalidArgumentDomainException("Comment text required.");
+            }
+        }
     }
 }

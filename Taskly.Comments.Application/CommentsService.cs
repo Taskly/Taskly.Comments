@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Taskly.Comments.Application.Entities;
 using Taskly.Comments.Model;
@@ -10,25 +11,79 @@ namespace Taskly.Comments.Application
 {
     public class CommentsService : ICommentsService
     {
-        public CommentsService(CommentsDbContext dbContext)
+        public CommentsService(IMapper mapper, CommentsDbContext dbContext)
         {
+            _mapper = mapper;
             _dbContext = dbContext;
         }
 
-        public async Task<List<Comment>> GetCommentsByLocator(Locator locator)
+        public Task<PaginatedList<Comment>> GetCommentsByLocator(Locator locator, int pageIndex, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PaginatedList<Comment>> GetCommentsByUser(string userId, int pageIndex, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Comment> GetCommentById(int id)
+        {
+            CommentEntity commentEntity = await FindCommentEntity(id);
+            Comment comment = _mapper.Map<Comment>(commentEntity);
+            return comment;
+        }
+
+        public async Task<Comment> AddComment(Comment comment)
+        {
+            if (comment is null)
+            {
+                throw new InvalidArgumentDomainException("Invalid comment.");
+            }
+
+            CommentEntity entity = _mapper.Map<CommentEntity>(comment);
+            _dbContext.Comments.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            _mapper.Map(entity, comment);
+            return comment;
+        }
+
+        public async Task<DeletedComment> MarkAsDeleted(int id, string removalUserId)
+        {
+            if (string.IsNullOrEmpty(removalUserId))
+            {
+                throw new InvalidArgumentDomainException("Removal user ID required.");
+            }
+
+            CommentEntity commentEntity = await FindCommentEntity(id);
+            Comment comment = _mapper.Map<Comment>(commentEntity);
+            if (comment.Status == CommentStatus.Deleted)
+            {
+                throw new InvalidOperationDomainException($"Comment '{id}' already deleted.");
+            }
+
+            var deletedComment = new DeletedComment(comment, removalUserId);
+
+            _mapper.Map(deletedComment, commentEntity);
+            await _dbContext.SaveChangesAsync();
+            return deletedComment;
+        }
+
+        private async Task<CommentEntity> FindCommentEntity(int id)
+        {
+            CommentEntity entity = await _dbContext.Comments.FirstOrDefaultAsync(x => x.Id == id);
+            if (entity is null)
+            {
+                throw new NotFoundDomainException("Comment", id);
+            }
+
+            return entity;
+        }
+
+        /*public async Task<List<Comment>> GetCommentsByLocator(Locator locator)
         {
             ValidateLocator(locator);
-
-            /*IEnumerable<CommentDto> commentsDto = Data.Skip(page * pageSize).Take(pageSize);
-            switch (sort)
-            {
-                case CommentsListSortType.NewToOld:
-                    commentsDto = commentsDto.OrderByDescending(x => x.Id);
-                    break;
-                case CommentsListSortType.OldToNew:
-                    commentsDto = commentsDto.OrderBy(x => x.Id);
-                    break;
-            }*/
 
             IQueryable<CommentEntity> query = _dbContext.Comments.AsQueryable();
             query = ApplyLocator(query, locator);
@@ -41,7 +96,7 @@ namespace Taskly.Comments.Application
         {
             if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidArgumentException("User ID required.");
+                throw new InvalidArgumentDomainException("User ID required.");
             }
 
             List<CommentEntity> entities =
@@ -54,7 +109,7 @@ namespace Taskly.Comments.Application
         {
             if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidArgumentException("User ID required.");
+                throw new InvalidArgumentDomainException("User ID required.");
             }
 
             List<DeletedCommentEntity> entities =
@@ -67,7 +122,7 @@ namespace Taskly.Comments.Application
         {
             if (string.IsNullOrEmpty(id))
             {
-                throw new InvalidArgumentException("Comment ID required.");
+                throw new InvalidArgumentDomainException("Comment ID required.");
             }
 
             int entityId = int.Parse(id);
@@ -81,20 +136,10 @@ namespace Taskly.Comments.Application
                 await _dbContext.DeletedComments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
             if (deletedCommentEntity is null)
             {
-                throw new NotFoundException("Comment", id);
+                throw new NotFoundDomainException("Comment", id);
             }
 
             return deletedCommentEntity.ToModel();
-        }
-
-        public async Task<Comment> AddComment(Comment comment)
-        {
-            ValidateComment(comment);
-
-            var entity = new CommentEntity(comment, string.Empty);
-            _dbContext.Comments.Add(entity);
-            await _dbContext.SaveChangesAsync();
-            return entity.ToModel();
         }
 
         public async Task<Comment> AddReply(string parentId, Comment comment)
@@ -102,7 +147,7 @@ namespace Taskly.Comments.Application
             ValidateComment(comment);
             if (string.IsNullOrEmpty(parentId))
             {
-                throw new InvalidArgumentException("Parent ID required.");
+                throw new InvalidArgumentDomainException("Parent ID required.");
             }
 
             var entity = new CommentEntity(comment, parentId);
@@ -115,14 +160,14 @@ namespace Taskly.Comments.Application
         {
             if (string.IsNullOrEmpty(id))
             {
-                throw new InvalidArgumentException("Comment ID required.");
+                throw new InvalidArgumentDomainException("Comment ID required.");
             }
 
             int entityId = int.Parse(id);
             CommentEntity commentEntity = await _dbContext.Comments.Where(x => x.Id == entityId).FirstOrDefaultAsync();
             if (commentEntity is null)
             {
-                throw new NotFoundException("Comment", id);
+                throw new NotFoundDomainException("Comment", id);
             }
 
             Comment comment = commentEntity.ToModel();
@@ -157,17 +202,17 @@ namespace Taskly.Comments.Application
         {
             if (comment is null)
             {
-                throw new InvalidArgumentException("Invalid argument: comment.");
+                throw new InvalidArgumentDomainException("Invalid argument: comment.");
             }
 
             if (string.IsNullOrEmpty(comment.UserId))
             {
-                throw new InvalidArgumentException("User ID required.");
+                throw new InvalidArgumentDomainException("User ID required.");
             }
 
             if (string.IsNullOrEmpty(comment.Text))
             {
-                throw new InvalidArgumentException("Comment text required.");
+                throw new InvalidArgumentDomainException("Comment text required.");
             }
 
             ValidateLocator(comment.Locator);
@@ -177,10 +222,11 @@ namespace Taskly.Comments.Application
         {
             if (locator is null || string.IsNullOrEmpty(locator.Section))
             {
-                throw new InvalidArgumentException("Locator section required.");
+                throw new InvalidArgumentDomainException("Locator section required.");
             }
-        }
+        }*/
 
+        private readonly IMapper _mapper;
         private readonly CommentsDbContext _dbContext;
     }
 }
