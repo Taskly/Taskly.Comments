@@ -4,7 +4,7 @@ namespace Taskly.Comments.Model
 {
     public class Locator
     {
-        public Locator(string section, string subsection, string element)
+        public Locator(string section, string subsection = null, string element = null)
         {
             if (string.IsNullOrEmpty(section))
             {

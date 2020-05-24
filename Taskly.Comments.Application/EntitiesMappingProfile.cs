@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using Taskly.Comments.Application.Entities;
 using Taskly.Comments.Model;
 
@@ -8,6 +9,10 @@ namespace Taskly.Comments.Application
     {
         public EntitiesMappingProfile()
         {
+            /*CreateMap<PaginatedList<CommentEntity>, PaginatedList<Comment>>();
+                .AfterMap((a, b, ctx) => ctx.Mapper.Map<List<CommentEntity>, List<Comment>>(a, b));*/
+            CreateMap(typeof(PaginatedList<>), typeof(PaginatedList<>));
+
             CreateMap<Comment, CommentEntity>()
                 .ForMember(x => x.RemovalTimestamp, options => options.Ignore())
                 .ForMember(x => x.RemovalUserId, options => options.Ignore())

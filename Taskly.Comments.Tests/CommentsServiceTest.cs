@@ -70,7 +70,7 @@ namespace Taskly.Comments.Tests
 
             Comment addedComment = await commentsService.AddComment(newComment);
 
-            Assert.AreEqual(5, addedComment.Id);
+            Assert.AreNotEqual(0, addedComment.Id);
             Assert.AreEqual(0, addedComment.ParentId);
             Assert.AreEqual("240", addedComment.UserId);
             Assert.AreEqual(CommentStatus.Active, addedComment.Status);
@@ -81,7 +81,7 @@ namespace Taskly.Comments.Tests
             Assert.AreEqual("My comment!", addedComment.Text);
             Assert.AreNotEqual(default, addedComment.Timestamp);
 
-            Assert.AreEqual(5, newComment.Id);
+            Assert.AreNotEqual(5, newComment.Id);
             Assert.AreEqual(0, newComment.ParentId);
             Assert.AreEqual("240", newComment.UserId);
             Assert.AreEqual(CommentStatus.Active, newComment.Status);
@@ -126,6 +126,62 @@ namespace Taskly.Comments.Tests
         {
             ICommentsService commentsService = new CommentsService(_mapper, _dbContext);
             await commentsService.MarkAsDeleted(4, "123");
+        }
+
+        [TestMethod]
+        public async Task GetCommentsByLocatorIsCorrect()
+        {
+            ICommentsService commentsService = new CommentsService(_mapper, _dbContext);
+
+            Locator locator = new Locator("97c3fe03", "d9c8", "a10");
+            PaginatedList<Comment> comments = await commentsService.GetCommentsByLocator(locator, 1, 100);
+            Assert.AreEqual(5, comments.Count);
+
+            locator = new Locator("97c3fe03", null, "b20");
+            comments = await commentsService.GetCommentsByLocator(locator, 1, 100);
+            Assert.AreEqual(3, comments.Count);
+
+            locator = new Locator("97c3fe03");
+            comments = await commentsService.GetCommentsByLocator(locator, 1, 100);
+            Assert.AreEqual(58, comments.Count);
+        }
+
+        [TestMethod]
+        public async Task PaginationIsCorrect()
+        {
+            ICommentsService commentsService = new CommentsService(_mapper, _dbContext);
+
+            Locator locator = new Locator("97c3fe03"); // 58
+
+            PaginatedList<Comment> comments = await commentsService.GetCommentsByLocator(locator, 1, 100);
+            Assert.AreEqual(58, comments.Count);
+            Assert.AreEqual(1, comments.PageIndex);
+            Assert.AreEqual(1, comments.TotalPages);
+            Assert.AreEqual(58, comments.TotalItems);
+
+            comments = await commentsService.GetCommentsByLocator(locator, 1, 25);
+            Assert.AreEqual(25, comments.Count);
+            Assert.AreEqual(1, comments.PageIndex);
+            Assert.AreEqual(3, comments.TotalPages);
+            Assert.AreEqual(58, comments.TotalItems);
+
+            comments = await commentsService.GetCommentsByLocator(locator, 2, 25);
+            Assert.AreEqual(25, comments.Count);
+            Assert.AreEqual(2, comments.PageIndex);
+            Assert.AreEqual(3, comments.TotalPages);
+            Assert.AreEqual(58, comments.TotalItems);
+
+            comments = await commentsService.GetCommentsByLocator(locator, 3, 25);
+            Assert.AreEqual(8, comments.Count);
+            Assert.AreEqual(3, comments.PageIndex);
+            Assert.AreEqual(3, comments.TotalPages);
+            Assert.AreEqual(58, comments.TotalItems);
+
+            comments = await commentsService.GetCommentsByLocator(locator, 10, 25);
+            Assert.AreEqual(0, comments.Count);
+            Assert.AreEqual(10, comments.PageIndex);
+            Assert.AreEqual(3, comments.TotalPages);
+            Assert.AreEqual(58, comments.TotalItems);
         }
 
         private void InitializeMapper()
@@ -189,6 +245,52 @@ namespace Taskly.Comments.Tests
                 Text = "Some bad text.",
                 Timestamp = new DateTime(2018, 2, 4)
             });
+
+            for (int i = 0; i < 5; ++i)
+            {
+                _dbContext.Comments.Add(new CommentEntity
+                {
+                    Id = 100 + i,
+                    ParentId = 0,
+                    UserId = "1890",
+                    Status = CommentStatus.Active,
+                    LocatorSection = "97c3fe03",
+                    LocatorSubsection = "d9c8",
+                    LocatorElement = $"a10",
+                    Text = "Some bad text.",
+                    Timestamp = new DateTime(2018, 2, 4).AddMinutes(i)
+                });
+            }
+
+            for (int i = 0; i < 3; ++i)
+            {
+                _dbContext.Comments.Add(new CommentEntity
+                {
+                    Id = 200 + i,
+                    ParentId = 0,
+                    UserId = "1890",
+                    Status = CommentStatus.Active,
+                    LocatorSection = "97c3fe03",
+                    LocatorElement = $"b20",
+                    Text = "Some bad text.",
+                    Timestamp = new DateTime(2018, 3, 4).AddMinutes(i)
+                });
+            }
+
+            for (int i = 0; i < 50; ++i)
+            {
+                _dbContext.Comments.Add(new CommentEntity
+                {
+                    Id = 300 + i,
+                    ParentId = 0,
+                    UserId = "1890",
+                    Status = CommentStatus.Active,
+                    LocatorSection = "97c3fe03",
+                    Text = "Some bad text.",
+                    Timestamp = new DateTime(2018, 4, 4).AddMinutes(i)
+                });
+            }
+
             _dbContext.SaveChanges();
         }
 
