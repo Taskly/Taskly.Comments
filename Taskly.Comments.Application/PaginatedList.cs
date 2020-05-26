@@ -9,10 +9,6 @@ namespace Taskly.Comments.Application
 {
     public class PaginatedList<T> : List<T>
     {
-        private PaginatedList()
-        {
-        }
-
         public PaginatedList(List<T> items, int count, int pageIndex, int pageSize)
         {
             PageIndex = pageIndex;
@@ -23,17 +19,22 @@ namespace Taskly.Comments.Application
 
         public const int PageMaxSize = 100;
 
-        public int PageIndex { get; private set; }
+        public int PageIndex { get; }
 
-        public int TotalPages { get; private set; }
+        public int TotalPages { get; }
 
-        public int TotalItems { get; private set; }
+        public int TotalItems { get; }
 
         public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
         {
-            if (pageIndex < 1 || pageSize < 1 || pageIndex > PageMaxSize)
+            if (pageIndex < 1 || pageSize < 1)
             {
                 throw new InvalidArgumentDomainException("Invalid pagination parameters.");
+            }
+
+            if (pageIndex > PageMaxSize)
+            {
+                throw new InvalidArgumentDomainException($"Invalid page size. Maximum page size is '{PageMaxSize}");
             }
 
             var count = await source.CountAsync();

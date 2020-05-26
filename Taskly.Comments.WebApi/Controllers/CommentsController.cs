@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Taskly.Comments.Application;
@@ -11,49 +14,27 @@ namespace Taskly.Comments.WebApi.Controllers
     [Route("api/v1/comments")]
     public class CommentsController : ControllerBase
     {
-        public CommentsController(ICommentsService commentsService)
+        public CommentsController(IMapper mapper, ICommentsService commentsService)
         {
+            _mapper = mapper;
             _commentsService = commentsService;
         }
 
-        /*[HttpGet("list")]
+        [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<List<CommentDto>>> GetCommentsList(LocatorDto locatorDto)
+        public async Task<ActionResult<CommentsListDto>> GetCommentsList(LocatorDto locatorDto,
+            [Required] int page, [Required] int pageSize)
         {
-            Locator locator = locatorDto.ToModel();
-            List<Comment> comments = await _commentsService.GetCommentsByLocator(locator);
-            List<CommentDto> commentsDto = comments.Select(x => new CommentDto(x)).ToList();
-            return Ok(commentsDto);
-        }*/
+            ThrowIfNull(locatorDto);
 
-        /*[HttpGet("top")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<List<CommentDto>> GetTopComments(LocatorDto locator)
-        {
-            return Ok();
-        }*/
+            Locator locator = new Locator(locatorDto.Section, locatorDto.Subsection, locatorDto.Element);
+            PaginatedList<Comment> comments = await _commentsService.GetCommentsByLocator(locator, page, pageSize);
 
-        /*[HttpGet("user/{userId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<List<CommentDto>>> GetCommentsByUser(string authorId)
-        {
-            List<Comment> comments = await _commentsService.GetCommentsByUser(authorId);
-            List<CommentDto> commentsDto = comments.Select(x => new CommentDto(x)).ToList();
-            return Ok(commentsDto);
-        }*/
-
-        /*[HttpGet("user/{userId}/deleted")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<List<DeletedCommentDto>>> GetDeletedCommentsByAuthor(string authorId)
-        {
-            List<DeletedComment> comments = await _commentsService.GetDeletedCommentsByUser(authorId);
-            List<DeletedCommentDto> commentsDto = comments.Select(x => new DeletedCommentDto(x)).ToList();
-            return Ok(commentsDto);
-        }*/
+            var commentsDto = new PaginatedList<CommentDto>(
+                comments.Select(x => _mapper.Map<CommentDto>(x)).ToList(), comments.TotalItems, page, pageSize);
+            return Ok(new CommentsListDto(commentsDto));
+        }
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -63,7 +44,7 @@ namespace Taskly.Comments.WebApi.Controllers
         {
             int commentId = ParseId(id);
             Comment comment = await _commentsService.GetCommentById(commentId);
-            var commentDto = new CommentDto(comment);
+            CommentDto commentDto = _mapper.Map<CommentDto>(comment);
             return Ok(commentDto);
         }
 
@@ -74,10 +55,12 @@ namespace Taskly.Comments.WebApi.Controllers
         {
             ThrowIfNull(dto);
 
+            var locator = new Locator(dto.Locator.Section, dto.Locator.Subsection, dto.Locator.Element);
             int commentParentId = ParseParentId(dto.ParentId);
-            var comment = new Comment(commentParentId, dto.UserId, dto.Locator.ToModel(), dto.Text);
+            var comment = new Comment(commentParentId, dto.UserId, locator, dto.Text);
             comment = await _commentsService.AddComment(comment);
-            var createdCommentDto = new CommentDto(comment);
+
+            CommentDto createdCommentDto = _mapper.Map<CommentDto>(comment);
             return CreatedAtAction(nameof(GetComment), new { id = createdCommentDto.Id }, createdCommentDto);
         }
 
@@ -85,11 +68,23 @@ namespace Taskly.Comments.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> DeleteComment(string id, [FromQuery] string removalUserId)
+        public async Task<ActionResult> DeleteComment(string id, string removalUserId)
         {
             int commentId = ParseId(id);
             await _commentsService.MarkAsDeleted(commentId, removalUserId);
             return NoContent();
+        }
+
+        [HttpGet("deleted/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DeletedCommentDto>> GetDeletedComment(string id)
+        {
+            int commentId = ParseId(id);
+            DeletedComment comment = await _commentsService.GetDeletedComment(commentId);
+            DeletedCommentDto commentDto = _mapper.Map<DeletedCommentDto>(comment);
+            return Ok(commentDto);
         }
 
         private int ParseId(string id)
@@ -121,6 +116,7 @@ namespace Taskly.Comments.WebApi.Controllers
             }
         }
 
+        private readonly IMapper _mapper;
         private readonly ICommentsService _commentsService;
     }
 }

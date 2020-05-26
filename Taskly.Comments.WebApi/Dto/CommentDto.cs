@@ -6,17 +6,6 @@ namespace Taskly.Comments.WebApi.Dto
 {
     public class CommentDto
     {
-        public CommentDto(Comment model)
-        {
-            Id = model.Id.ToString();
-            ParentId = model.ParentId.ToString();
-            UserId = model.UserId;
-            Status = model.Status;
-            Locator = new LocatorDto(model.Locator);
-            Text = model.Text;
-            Timestamp = model.Timestamp;
-        }
-
         [Required]
         public string Id { get; set; }
 

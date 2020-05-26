@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -30,16 +29,9 @@ namespace Taskly.Comments.Application
                 .OrderByDescending(x => x.Id)
                 .ToPaginatedListAsync(pageIndex, pageSize);
 
-            // PaginatedList<Comment> comments = new PaginatedList<Comment>(
-            //     entities.Select(x => _mapper.Map<Comment>(x)).ToList(), entities.TotalItems, pageIndex, pageSize);
-            // return comments;
-            PaginatedList<Comment> comments = _mapper.Map<PaginatedList<Comment>>(entities);
+            PaginatedList<Comment> comments = new PaginatedList<Comment>(
+                entities.Select(x => _mapper.Map<Comment>(x)).ToList(), entities.TotalItems, pageIndex, pageSize);
             return comments;
-        }
-
-        public Task<PaginatedList<Comment>> GetCommentsByUser(string userId, int pageIndex, int pageSize)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Comment> GetCommentById(int id)
@@ -82,6 +74,18 @@ namespace Taskly.Comments.Application
 
             _mapper.Map(deletedComment, commentEntity);
             await _dbContext.SaveChangesAsync();
+            return deletedComment;
+        }
+
+        public async Task<DeletedComment> GetDeletedComment(int id)
+        {
+            CommentEntity comment = await FindCommentEntity(id);
+            if (comment.Status != CommentStatus.Deleted)
+            {
+                throw new InvalidOperationDomainException($"Comment '{id} not deleted.");
+            }
+
+            DeletedComment deletedComment = _mapper.Map<DeletedComment>(comment);
             return deletedComment;
         }
 

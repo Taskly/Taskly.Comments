@@ -21,7 +21,7 @@ namespace Taskly.Comments.WebApi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(EntitiesMappingProfile));
+            services.AddAutoMapper(typeof(EntitiesMappingProfile), typeof(DtoMappingProfile));
             services.AddScoped<ICommentsService, CommentsService>();
             services.AddDbContext<CommentsDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
